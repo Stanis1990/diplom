@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - Интернет-магазин{% endblock %}
+
+{% block content %}
+<!-- Карусель промо-акций -->
+<div id="promoCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="2"></button>
+    </div>
+</div>
+
+<div class="row">
+<!-- Сайдбар с поиском -->
+    <div class="col-md">
+        <div class="card">
+            <div class="card-header">
+                <h5>Поиск товаров</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'products:home' %}">
+                    <div class="input-group">
+                        <input type="text" 
+                               name="search" 
+                               class="form-control" 
+                               placeholder="Название или описание..."
+                               value="{{ search_query }}"
+                               aria-label="Поиск товаров">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Товары -->
+<div class="row">
+    <div class="col-12">
+        <h2 class="text-center mb-4 mt-4">Товары</h2>
+    </div>
+    {% for product in products %}
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+        <div class="card product-card h-100">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <span class="text-muted">Нет изображения</span>
+                </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text flex-grow-1">{{ product.description|truncatewords:15 }}</p>
+                <div class="mt-auto">
+                    <p class="h5 text-primary">{{ product.price }} руб.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-outline-primary">Подробнее</a>
+                        <form action="{% url 'cart:cart_add' product.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-cart-plus"></i> В корзину
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <h4>Товары не найдены</h4>
+            <p>Добавьте товары через админ-панель</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

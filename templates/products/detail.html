@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'products:home' %}">Главная</a></li>
+        <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-6">
+        <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}">
+    </div>
+    <div class="col-md-6">
+        <h1 class="display-5">{{ product.name }}</h1>
+        
+         
+        
+        <h2 class="text-primary mb-3">{{ product.price }} руб.</h2>
+        
+        <div class="mb-4">
+            <p class="lead">{{ product.description }}</p>
+        </div>
+
+        <div class="mb-4">
+            {% if product.is_available %}
+                <span class="badge bg-success">В наличии</span>
+            {% else %}
+                <span class="badge bg-danger">Нет в наличии</span>
+            {% endif %}
+        </div>
+
+        {% if product.is_available %}
+        <form action="{% url 'cart:cart_add' product.id %}" method="post" class="row g-3 align-items-center">
+            {% csrf_token %}
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-cart-plus"></i> Добавить в корзину
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <button class="btn btn-secondary btn-lg" disabled>Товар недоступен</button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Дополнительная информация -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Дополнительная информация</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th>Дата добавления:</th>
+                        <td>{{ product.created_at|date:"d.m.Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Последнее обновление:</th>
+                        <td>{{ product.updated_at|date:"d.m.Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Статус:</th>
+                        <td>
+                            {% if product.is_available %}
+                                <span class="badge bg-success">Доступен</span>
+                            {% else %}
+                                <span class="badge bg-danger">Недоступен</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

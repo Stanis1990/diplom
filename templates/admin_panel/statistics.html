@@ -1,0 +1,328 @@
+{% extends 'admin_panel/base.html' %}
+{% load statistics_filters %}
+
+{% block title %}Статистика - Админ панель{% endblock %}
+{% block page_title %}Статистика продаж{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Выбор периода</h6>
+                <div class="btn-group">
+                    <a href="?period=today" class="btn btn-outline-primary {% if period == 'today' %}active{% endif %}">
+                        Сегодня
+                    </a>
+                    <a href="?period=week" class="btn btn-outline-primary {% if period == 'week' %}active{% endif %}">
+                        Неделя
+                    </a>
+                    <a href="?period=month" class="btn btn-outline-primary {% if period == 'month' %}active{% endif %}">
+                        Месяц
+                    </a>
+                    <a href="?period=year" class="btn btn-outline-primary {% if period == 'year' %}active{% endif %}">
+                        Год
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Период: 
+                            {% if period == 'today' %}Сегодня
+                            {% elif period == 'week' %}Последние 7 дней
+                            {% elif period == 'month' %}Последние 30 дней
+                            {% elif period == 'year' %}Последние 365 дней
+                            {% endif %}
+                        </h5>
+                        <p class="text-muted">
+                            {{ start_date|date:"d.m.Y" }} - {{ end_date|date:"d.m.Y" }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ total_orders_period }}</h5>
+                                        <p class="card-text">Заказов</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ total_revenue_period }} руб.</h5>
+                                        <p class="card-text">Выручка</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    Статистика по товарам за период
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if product_stats %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Товар</th>
+                                <th>Количество продаж</th>
+                                <th>Общая выручка</th>
+                                <th>Средняя цена</th>
+                                <th>Доля в выручке</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in product_stats %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <strong>{{ item.product__name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ item.total_quantity }} шт.
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-success fw-bold">
+                                        {{ item.total_revenue }} руб.
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if item.total_quantity > 0 %}
+                                        {{ item.total_revenue|floatformat:2 }} / {{ item.total_quantity }} = 
+                                        <strong>{{ item.total_revenue|floatformat:2|div:item.total_quantity|floatformat:2 }} руб.</strong>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if total_revenue_period > 0 %}
+                                        {% widthratio item.total_revenue total_revenue_period 100 as percentage %}
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-info" role="progressbar" 
+                                                 style="width: {{ percentage }}%;" 
+                                                 aria-valuenow="{{ percentage }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ percentage }}%
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <td colspan="2"><strong>Итого:</strong></td>
+                                <td>
+                                    <strong>
+                                        {% with total_quantity=product_stats|dictsum:"total_quantity" %}
+                                            {{ total_quantity }} шт.
+                                        {% endwith %}
+                                    </strong>
+                                </td>
+                                <td><strong>{{ total_revenue_period }} руб.</strong></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
+                    <h4>Нет данных за выбранный период</h4>
+                    <p class="text-muted">За выбранный период продажи отсутствуют</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Дополнительная статистика -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Топ-5 товаров по количеству</h6>
+            </div>
+            <div class="card-body">
+                {% if product_stats %}
+                <div class="list-group">
+                    {% for item in product_stats|slice:":5" %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ item.product__name }}</h6>
+                            <small class="text-muted">Выручка: {{ item.total_revenue }} руб.</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                            {{ item.total_quantity }} шт.
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Нет данных</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Топ-5 товаров по выручке</h6>
+            </div>
+            <div class="card-body">
+                {% if product_stats %}
+                {% with sorted_by_revenue=product_stats|dictsortreversed:"total_revenue" %}
+                <div class="list-group">
+                    {% for item in sorted_by_revenue|slice:":5" %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ item.product__name }}</h6>
+                            <small class="text-muted">Продано: {{ item.total_quantity }} шт.</small>
+                        </div>
+                        <span class="badge bg-success rounded-pill">
+                            {{ item.total_revenue }} руб.
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endwith %}
+                {% else %}
+                <p class="text-muted text-center">Нет данных</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Сводка по периодам -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Сравнение периодов</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Период</th>
+                                <th>Заказов</th>
+                                <th>Выручка</th>
+                                <th>Средний чек</th>
+                                <th>Товаров продано</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Сегодня</td>
+                                <td>
+                                    <a href="?period=today" class="text-decoration-none">
+                                        {{ orders_today }}
+                                    </a>
+                                </td>
+                                <td>{{ revenue_today }} руб.</td>
+                                <td>
+                                    {% if orders_today > 0 %}
+                                        {{ revenue_today|floatformat:2|div:orders_today|floatformat:2 }} руб.
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with today_items=order_items_today|default:0 %}
+                                        {{ today_items }} шт.
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Неделя</td>
+                                <td>
+                                    <a href="?period=week" class="text-decoration-none">
+                                        {{ orders_week }}
+                                    </a>
+                                </td>
+                                <td>{{ revenue_week }} руб.</td>
+                                <td>
+                                    {% if orders_week > 0 %}
+                                        {{ revenue_week|floatformat:2|div:orders_week|floatformat:2 }} руб.
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with week_items=order_items_week|default:0 %}
+                                        {{ week_items }} шт.
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Месяц</td>
+                                <td>
+                                    <a href="?period=month" class="text-decoration-none">
+                                        {{ orders_month }}
+                                    </a>
+                                </td>
+                                <td>{{ revenue_month }} руб.</td>
+                                <td>
+                                    {% if orders_month > 0 %}
+                                        {{ revenue_month|floatformat:2|div:orders_month|floatformat:2 }} руб.
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with month_items=order_items_month|default:0 %}
+                                        {{ month_items }} шт.
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Автоматическое обновление данных каждые 5 минут
+setTimeout(function() {
+    window.location.reload();
+}, 300000);
+
+// Добавляем tooltips для прогресс-баров
+document.addEventListener('DOMContentLoaded', function() {
+    var progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(function(bar) {
+        bar.setAttribute('title', bar.textContent + ' от общей выручки');
+    });
+});
+</script>
+{% endblock %}

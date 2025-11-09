@@ -1,0 +1,42 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'products:home' %}">
+            <i class="fas fa-store"></i> Магазин
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'products:home' %}">Главная</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'orders:order_list' %}">Мои заказы</a>
+                </li>
+               
+            </ul>
+            
+            <ul class="navbar-nav">
+                {% if user.is_authenticated and user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_panel:dashboard' %}">
+                        <i class="fas fa-cog"></i> Админ панель
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link position-relative" href="{% url 'cart:cart_detail' %}">
+                        <i class="fas fa-shopping-cart"></i>
+                        Корзина
+                        {% if cart_items_count > 0 %}
+                            <span class="badge bg-primary cart-badge">{{ cart_items_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
